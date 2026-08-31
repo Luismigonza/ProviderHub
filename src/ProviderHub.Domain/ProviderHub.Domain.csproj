@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The innermost layer: entities, value objects and business rules.
+       It deliberately has ZERO dependencies, not even on NuGet packages. -->
+
+</Project>

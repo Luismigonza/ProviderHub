@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Implementations of the interfaces declared by Application:
+       EF Core persistence, e-mail delivery, external services. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProviderHub.Application\ProviderHub.Application.csproj" />
+  </ItemGroup>
+
+</Project>

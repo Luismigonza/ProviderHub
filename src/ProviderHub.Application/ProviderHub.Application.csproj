@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Use cases and orchestration. Knows the domain, knows nothing about
+       databases, HTTP or SMTP: those are described here only as interfaces. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProviderHub.Domain\ProviderHub.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

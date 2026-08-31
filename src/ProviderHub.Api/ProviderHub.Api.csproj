@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- The composition root: HTTP endpoints, dependency injection wiring and
+       cross-cutting concerns (authentication, error handling, OpenAPI). -->
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProviderHub.Application\ProviderHub.Application.csproj" />
+    <ProjectReference Include="..\ProviderHub.Infrastructure\ProviderHub.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

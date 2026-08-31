@@ -1,0 +1,24 @@
+<Project>
+
+  <!-- Central Package Management: every NuGet version lives here, .csproj files only
+       declare which packages they need. One place to audit and upgrade dependencies. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup Label="ASP.NET Core">
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
+    <!-- Transitive pin: Microsoft.AspNetCore.OpenApi 10.0.5 pulls Microsoft.OpenApi 2.0.0,
+         which carries advisory GHSA-v5pm-xwqc-g5wc. This pin forces a patched build. -->
+    <PackageVersion Include="Microsoft.OpenApi" Version="2.12.2" />
+  </ItemGroup>
+
+  <ItemGroup Label="Testing">
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+</Project>

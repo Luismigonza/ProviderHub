@@ -1,0 +1,22 @@
+<Project>
+
+  <!-- Settings shared by every project in the solution. Keeping them here avoids
+       repeating (and desynchronizing) the same properties across seven .csproj files. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Quality gates: a warning that is allowed to survive eventually becomes a bug. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+
+    <!-- XML docs feed Swagger later on. CS1591 is muted so that undocumented
+         internals do not break the build; public API docs are still encouraged. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+</Project>
