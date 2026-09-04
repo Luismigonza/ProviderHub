@@ -68,6 +68,29 @@ Country codes follow ISO 3166-1 alpha-2 so that the indicators aggregate reliabl
 would turn "Colombia", "colombia" and "COL" into three different countries. NIT check digits are
 verified with the official algorithm rather than merely stored.
 
+## Use cases
+
+Each operation the system can perform is one class in `Application`, holding its command, its
+validator and its handler in a single file. The list of files under `UseCases` is therefore the
+list of things the system does.
+
+**No mediator.** A mediator was considered and left out: with eleven use cases, `Send(command)`
+only adds a layer of indirection over calling the handler, at the cost of losing compile-time
+knowledge of who handles what. MediatR would also have brought a licence (RPL-1.5, or
+commercial) that a project this size does not need to take on. The pattern it usually carries,
+one handler per use case, is applied here directly.
+
+**Validation happens twice, on purpose.** `Application` validates the incoming request with
+FluentValidation so the caller receives a single `400` listing every field that is wrong.
+`Domain` validates again when building its value objects, because it cannot trust that it is
+only ever called through the API. The rules are not written twice: the validators ask the domain
+to build the value and report its message, so a rule like the NIT check digit exists in exactly
+one place.
+
+**Errors are expressed in the language of the application**, not of HTTP: `NotFoundException`,
+`ConflictException` and FluentValidation's `ValidationException`. Turning them into 404, 409 and
+400 is the API layer's job, which keeps the use cases runnable from a job or a test.
+
 ## Repository conventions
 
 - `global.json` pins the .NET SDK so every machine builds with the same toolchain.

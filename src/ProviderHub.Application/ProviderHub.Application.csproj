@@ -4,6 +4,12 @@
        databases, HTTP or SMTP: those are described here only as interfaces. -->
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ProviderHub.Domain\ProviderHub.Domain.csproj" />
   </ItemGroup>
 

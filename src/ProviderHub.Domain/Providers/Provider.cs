@@ -52,6 +52,17 @@ public sealed class Provider : AggregateRoot
     public void Rename(string? name) =>
         Name = DomainGuard.RequiredText(name, NameMaxLength, "Provider name");
 
+    /// <summary>
+    /// Corrects the tax identifier. Uniqueness across providers is not something this instance
+    /// can know about, so it is checked by the use case before calling this.
+    /// </summary>
+    public void ChangeNit(Nit nit)
+    {
+        ArgumentNullException.ThrowIfNull(nit);
+
+        Nit = nit;
+    }
+
     public void ChangeContactDetails(WebsiteUrl website, EmailAddress email)
     {
         ArgumentNullException.ThrowIfNull(website);
