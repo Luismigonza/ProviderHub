@@ -35,6 +35,39 @@ ProviderHub.sln
 `Api` is the only project allowed to reference `Infrastructure`, and it does so purely to
 register implementations in the DI container at startup.
 
+## Domain model
+
+```
+Provider (aggregate root)          Service (aggregate root)
+  Nit          value object          Name
+  Name                               HourlyRate   value object (Money)
+  Website      value object
+  Email        value object
+  Offerings ──┐
+              │
+              └── ServiceOffering (entity, inside the Provider aggregate)
+                    ServiceId   ──────────────────────────► Service
+                    Countries   value objects (CountryCode)
+```
+
+Two decisions are worth calling out, because the statement of the test does not settle them.
+
+**Where the country lives.** The test asks for indicators "by country" but never defines a
+country field on any entity. It is modelled here on the relationship: a provider offers a given
+service in a given set of countries. A provider may therefore offer consulting across Colombia
+and Mexico while offering auditing only in Peru, which is both closer to reality and what makes
+the two summary indicators answerable. The consequence is that `ServiceOffering` is a real
+entity carrying its own data, not a plain join row.
+
+**Why `Service` is its own aggregate root.** Several providers can offer the same catalogue
+entry, so a service exists independently of any provider. Offerings reference it by identifier
+rather than holding it, which keeps the two aggregates loosely coupled: one transaction changes
+one aggregate.
+
+Country codes follow ISO 3166-1 alpha-2 so that the indicators aggregate reliably; free text
+would turn "Colombia", "colombia" and "COL" into three different countries. NIT check digits are
+verified with the official algorithm rather than merely stored.
+
 ## Repository conventions
 
 - `global.json` pins the .NET SDK so every machine builds with the same toolchain.
@@ -55,7 +88,7 @@ dotnet test
 Tracked as the implementation progresses.
 
 - [x] Structured solution, separated projects, DDD-oriented design
-- [ ] Provider and Service entities with auto-generated identifiers
+- [x] Provider and Service entities, business rules and unit tests
 - [ ] RESTful API
 - [ ] Pagination, sorting and search on every list
 - [ ] Authentication

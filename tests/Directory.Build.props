@@ -1,0 +1,17 @@
+<Project>
+
+  <!-- Inherit everything from the solution-wide Directory.Build.props, then relax the rules
+       that only make sense for production code. Without this import MSBuild would stop at the
+       nearest file and the test projects would silently lose the shared settings. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove($(MSBuildThisFile), $(MSBuildThisFileDirectory)..))" />
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+
+    <!-- CA1707: test names are sentences, and underscores are how xUnit conventions write them.
+         CA1515: test classes must be public for the runner to discover them.
+         Both rules are about library design, which is not what a test project is. -->
+    <NoWarn>$(NoWarn);CA1707;CA1515</NoWarn>
+  </PropertyGroup>
+
+</Project>
