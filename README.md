@@ -92,6 +92,57 @@ one place.
 `ConflictException` and FluentValidation's `ValidationException`. Turning them into 404, 409 and
 400 is the API layer's job, which keeps the use cases runnable from a job or a test.
 
+## API
+
+| Verb | Route | What it does |
+| --- | --- | --- |
+| GET | `/api/providers` | List, paged, searchable and sortable |
+| POST | `/api/providers` | Register a provider |
+| GET | `/api/providers/{id}` | One provider with everything it offers |
+| PUT | `/api/providers/{id}` | Edit its identifying and contact details |
+| POST | `/api/providers/{id}/services` | Enable a service in a set of countries |
+| PUT | `/api/providers/{id}/services/{serviceId}` | Replace the countries of an offering |
+| DELETE | `/api/providers/{id}/services/{serviceId}` | Stop offering a service |
+| GET | `/api/services` | Catalogue, paged, searchable and sortable |
+| POST | `/api/services` | Add a catalogue entry |
+| GET | `/api/services/{id}` | One catalogue entry |
+| PUT | `/api/services/{id}` | Edit its name or hourly rate |
+| GET | `/api/{providers\|services}/sort-fields` | Which fields that list can be sorted by |
+
+Every list accepts `?page=&pageSize=&search=&sortBy=&direction=asc|desc`, and answers with the
+rows plus `totalCount`, `totalPages`, `hasNextPage` and `hasPreviousPage`, so a client can render
+a pager without a second request or a guess.
+
+**Failures are always `ProblemDetails`** (RFC 9457), whichever endpoint produced them. The
+translation from the language of the application to status codes happens in one place, so no
+endpoint can forget it and no two endpoints can disagree:
+
+| Raised by a use case | Answer |
+| --- | --- |
+| `ValidationException` | `400` with an `errors` object, one entry per field |
+| `NotFoundException` | `404` |
+| `ConflictException` | `409` |
+| `DomainException` | `400`, and a log entry: a validator upstream is missing |
+| anything else | `500` with no detail, and the exception in the logs |
+
+A rejected request names every problem at once rather than the first one:
+
+```json
+{
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "nit": ["The check digit of NIT '890903938-1' is wrong, expected 8."],
+    "name": ["'Name' must not be empty."],
+    "website": ["'javascript:alert(1)' must use the http or https scheme."],
+    "email": ["'not-an-email' is not a valid e-mail address."]
+  }
+}
+```
+
+Interactive documentation is served at `/scalar/v1` in development, generated from the OpenAPI
+document and the XML comments on the controllers.
+
 ## Database
 
 ```mermaid
@@ -164,7 +215,13 @@ dotnet ef database update --project src/ProviderHub.Infrastructure
 docker exec -i providerhub-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'ProviderHub!2026' -C -d ProviderHub -b < db/seed.sql
 ```
 
-Then build and run the tests:
+Then run the API and open <http://localhost:5199/scalar/v1>:
+
+```bash
+dotnet run --project src/ProviderHub.Api
+```
+
+Or build and run the tests:
 
 ```bash
 dotnet build
@@ -182,12 +239,12 @@ Tracked as the implementation progresses.
 - [x] Structured solution, separated projects, DDD-oriented design
 - [x] Provider and Service entities, business rules and unit tests
 - [x] Persistence: EF Core mapping, repositories, migrations
-- [ ] RESTful API
-- [ ] Pagination, sorting and search on every list
+- [x] RESTful API
+- [x] Pagination, sorting and search on every list
 - [ ] Authentication
 - [ ] E-mail notification when a service is created
 - [ ] Summary endpoint with two indicators
-- [ ] Input validation
+- [x] Input validation
 - [ ] Unit and integration tests
 - [ ] Angular frontend on top of a pre-existing design system
 - [x] Database schema diagram

@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using ProviderHub.Application.Common;
 using ProviderHub.Application.Providers.UseCases;
 using ProviderHub.Application.Services.UseCases;
 
@@ -16,7 +17,11 @@ public static class DependencyInjection
         ArgumentNullException.ThrowIfNull(services);
 
         // Validators are discovered by scanning: one per command, always found the same way.
-        services.AddValidatorsFromAssemblyContaining<CreateProviderCommand>();
+        // PageRequestValidator is skipped: it takes the set of sortable fields as a constructor
+        // argument, so it is built by the list validators that know their own fields, never
+        // resolved from the container.
+        services.AddValidatorsFromAssemblyContaining<CreateProviderCommand>(
+            filter: result => result.ValidatorType != typeof(PageRequestValidator));
 
         // Handlers are registered by hand. There are eleven of them and the list doubles as an
         // inventory of what the system can do; assembly scanning would hide that behind magic.

@@ -41,7 +41,14 @@ public class DependencyInjectionTests
         services.AddSingleton<IUnitOfWork, RecordingUnitOfWork>();
         services.AddApplication();
 
-        using var provider = services.BuildServiceProvider(validateScopes: true);
+        // ValidateOnBuild walks every registration instead of only the ones this test resolves.
+        // Without it, a service that no handler happens to depend on can still be registered with
+        // an unresolvable constructor, and the failure waits until the application starts.
+        using var provider = services.BuildServiceProvider(new ServiceProviderOptions
+        {
+            ValidateScopes = true,
+            ValidateOnBuild = true,
+        });
         using var scope = provider.CreateScope();
 
         Assert.NotNull(scope.ServiceProvider.GetRequiredService(handlerType));
