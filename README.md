@@ -27,9 +27,10 @@ ProviderHub.sln
 │   ├── ProviderHub.Infrastructure   Adapters: EF Core, SMTP, external services.
 │   └── ProviderHub.Api              HTTP endpoints, authentication, DI composition root.
 └── tests
-    ├── ProviderHub.Domain.Tests
-    ├── ProviderHub.Application.Tests
-    └── ProviderHub.Api.IntegrationTests
+    ├── ProviderHub.Domain.Tests           Business rules. No dependencies, milliseconds.
+    ├── ProviderHub.Application.Tests      Use cases against in-memory repositories.
+    ├── ProviderHub.Infrastructure.Tests   Mapping, indexes and SQL, against a real SQL Server.
+    └── ProviderHub.Api.IntegrationTests   End to end, over HTTP.
 ```
 
 `Api` is the only project allowed to reference `Infrastructure`, and it does so purely to
