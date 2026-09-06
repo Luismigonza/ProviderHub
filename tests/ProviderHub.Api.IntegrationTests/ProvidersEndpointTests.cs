@@ -15,7 +15,7 @@ public class ProvidersEndpointTests(ApiFactory factory)
     [RequiresDatabaseFact]
     public async Task A_provider_is_created_and_can_be_read_back_from_its_location_header()
     {
-        using var client = factory.CreateClient();
+        using var client = await factory.CreateSignedInClientAsync();
 
         var response = await client.PostAsJsonAsync("/api/providers", new
         {
@@ -40,7 +40,7 @@ public class ProvidersEndpointTests(ApiFactory factory)
     [RequiresDatabaseFact]
     public async Task An_unknown_provider_answers_404_as_problem_details()
     {
-        using var client = factory.CreateClient();
+        using var client = await factory.CreateSignedInClientAsync();
 
         var response = await client.GetAsync(new Uri("/api/providers/999999", UriKind.Relative));
 
@@ -54,7 +54,7 @@ public class ProvidersEndpointTests(ApiFactory factory)
     [RequiresDatabaseFact]
     public async Task Every_invalid_field_is_reported_in_a_single_response()
     {
-        using var client = factory.CreateClient();
+        using var client = await factory.CreateSignedInClientAsync();
 
         var response = await client.PostAsJsonAsync("/api/providers", new
         {
@@ -79,7 +79,7 @@ public class ProvidersEndpointTests(ApiFactory factory)
     [RequiresDatabaseFact]
     public async Task A_duplicated_tax_identifier_answers_409()
     {
-        using var client = factory.CreateClient();
+        using var client = await factory.CreateSignedInClientAsync();
 
         var provider = new
         {
@@ -99,7 +99,7 @@ public class ProvidersEndpointTests(ApiFactory factory)
     [RequiresDatabaseFact]
     public async Task A_service_is_offered_listed_and_withdrawn()
     {
-        using var client = factory.CreateClient();
+        using var client = await factory.CreateSignedInClientAsync();
 
         var service = await CreateAsync(client, "/api/services", new
         {
@@ -166,7 +166,7 @@ public class ListEndpointTests(ApiFactory factory)
     [RequiresDatabaseFact]
     public async Task A_list_answers_with_its_paging_metadata()
     {
-        using var client = factory.CreateClient();
+        using var client = await factory.CreateSignedInClientAsync();
 
         var page = await client.GetFromJsonAsync<JsonElement>(
             new Uri("/api/services?page=1&pageSize=5", UriKind.Relative));
@@ -180,7 +180,7 @@ public class ListEndpointTests(ApiFactory factory)
     [RequiresDatabaseFact]
     public async Task An_oversized_page_is_refused_rather_than_served()
     {
-        using var client = factory.CreateClient();
+        using var client = await factory.CreateSignedInClientAsync();
 
         // Anyone can type this in the address bar; without a cap it is a denial of service.
         var response = await client.GetAsync(new Uri("/api/services?pageSize=1000000", UriKind.Relative));
@@ -191,7 +191,7 @@ public class ListEndpointTests(ApiFactory factory)
     [RequiresDatabaseFact]
     public async Task An_unknown_sort_field_is_refused_rather_than_passed_to_the_database()
     {
-        using var client = factory.CreateClient();
+        using var client = await factory.CreateSignedInClientAsync();
 
         var response = await client.GetAsync(
             new Uri("/api/services?sortBy=%3B%20DROP%20TABLE%20Services", UriKind.Relative));
@@ -202,7 +202,7 @@ public class ListEndpointTests(ApiFactory factory)
     [RequiresDatabaseFact]
     public async Task A_direction_that_is_neither_asc_nor_desc_is_refused()
     {
-        using var client = factory.CreateClient();
+        using var client = await factory.CreateSignedInClientAsync();
 
         var response = await client.GetAsync(new Uri("/api/services?direction=sideways", UriKind.Relative));
 
@@ -212,7 +212,7 @@ public class ListEndpointTests(ApiFactory factory)
     [RequiresDatabaseFact]
     public async Task The_sortable_fields_of_each_list_are_discoverable()
     {
-        using var client = factory.CreateClient();
+        using var client = await factory.CreateSignedInClientAsync();
 
         var fields = await client.GetFromJsonAsync<string[]>(
             new Uri("/api/providers/sort-fields", UriKind.Relative));

@@ -1,8 +1,12 @@
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using ProviderHub.Infrastructure.Authentication;
 using ProviderHub.Infrastructure.Persistence;
 
 namespace ProviderHub.Api.IntegrationTests;
@@ -20,6 +24,15 @@ namespace ProviderHub.Api.IntegrationTests;
 public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private const string DatabaseName = "ProviderHub_ApiTests";
+
+    /// <summary>Credentials this factory configures, so the tests never depend on the dev settings.</summary>
+    public const string UserName = "test-user";
+
+    public const string Password = "Sup3rSecret!2026";
+
+    // Hashed with the very code the application uses, rather than pasted in as a constant: if
+    // the hashing changes, these tests keep working, and if it breaks, they fail.
+    private static readonly string PasswordHash = PasswordHasher.Hash(Password);
 
     private static readonly string MasterConnection =
         Environment.GetEnvironmentVariable("PROVIDERHUB_TEST_CONNECTION")
@@ -75,6 +88,25 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     async Task IAsyncLifetime.DisposeAsync() => await DisposeAsync();
 
+    /// <summary>A client that has already signed in, which is what most of the tests need.</summary>
+    public async Task<HttpClient> CreateSignedInClientAsync()
+    {
+        var client = CreateClient();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/auth/login",
+            new { userName = UserName, password = Password });
+
+        response.EnsureSuccessStatusCode();
+
+        var token = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", token.GetProperty("accessToken").GetString());
+
+        return client;
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -84,6 +116,14 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         // the tests. Only the database it talks to changes.
         builder.UseEnvironment("Development");
         builder.UseSetting("ConnectionStrings:ProviderHub", TestConnectionString);
+
+        // Its own user and its own signing key, so a change to the developer's local settings
+        // cannot make the test suite pass or fail.
+        builder.UseSetting("Authentication:UserName", UserName);
+        builder.UseSetting("Authentication:PasswordHash", PasswordHash);
+        builder.UseSetting(
+            "Authentication:SigningKey",
+            "integration-tests-signing-key-that-is-long-enough-for-hmac-sha256");
     }
 }
 

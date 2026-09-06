@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ProviderHub.Application.Abstractions.Authentication;
 using ProviderHub.Application.Abstractions.Persistence;
+using ProviderHub.Infrastructure.Authentication;
 using ProviderHub.Infrastructure.Persistence;
 using ProviderHub.Infrastructure.Persistence.Repositories;
 
@@ -12,10 +15,29 @@ namespace ProviderHub.Infrastructure;
 /// </summary>
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, string connectionString)
+    /// <summary>Name of the connection string this application expects.</summary>
+    public const string ConnectionStringName = "ProviderHub";
+
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(services);
-        ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        return services
+            .AddPersistence(configuration)
+            .AddAuthentication(configuration);
+    }
+
+    private static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Failing at startup with a clear message beats failing on the first request with a null
+        // reference. A misconfigured deployment should never reach the point of accepting traffic.
+        var connectionString = configuration.GetConnectionString(ConnectionStringName)
+            ?? throw new InvalidOperationException(
+                $"Connection string '{ConnectionStringName}' is missing. " +
+                "See appsettings.Development.json for the local one.");
 
         services.AddDbContext<ProviderHubDbContext>(options =>
             options.UseSqlServer(connectionString, sqlServer =>
@@ -33,6 +55,24 @@ public static class DependencyInjection
         // The DbContext is the unit of work. Resolving the same instance through both types
         // keeps repositories and commit inside one change tracker, and therefore one transaction.
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<ProviderHubDbContext>());
+
+        return services;
+    }
+
+    private static IServiceCollection AddAuthentication(this IServiceCollection services, IConfiguration configuration)
+    {
+        services
+            .AddOptions<JwtAuthenticationOptions>()
+            .Bind(configuration.GetSection(JwtAuthenticationOptions.SectionName))
+            .ValidateDataAnnotations()
+
+            // Without this the options are validated the first time someone asks for them, which
+            // is during a request. A deployment missing its signing key should fail to start,
+            // not fail its first sign-in.
+            .ValidateOnStart();
+
+        services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
+        services.AddSingleton<ICredentialVerifier, ConfiguredCredentialVerifier>();
 
         return services;
     }

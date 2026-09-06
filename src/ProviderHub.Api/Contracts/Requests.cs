@@ -26,3 +26,7 @@ public sealed record ChangeCountriesRequest(IReadOnlyList<string> Countries);
 /// <param name="Name">Name of the service, unique across the catalogue.</param>
 /// <param name="HourlyRate">Price of one hour, in US dollars.</param>
 public sealed record SaveServiceRequest(string Name, decimal HourlyRate);
+
+/// <param name="UserName">Name of the default user.</param>
+/// <param name="Password">Its password.</param>
+public sealed record LoginRequest(string UserName, string Password);

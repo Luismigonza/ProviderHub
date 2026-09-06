@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using ProviderHub.Application.Authentication.UseCases;
 using ProviderHub.Application.Common;
 using ProviderHub.Application.Providers.UseCases;
 using ProviderHub.Application.Services.UseCases;
@@ -25,6 +26,8 @@ public static class DependencyInjection
 
         // Handlers are registered by hand. There are eleven of them and the list doubles as an
         // inventory of what the system can do; assembly scanning would hide that behind magic.
+        services.AddScoped<SignInHandler>();
+
         services.AddScoped<CreateProviderHandler>();
         services.AddScoped<UpdateProviderHandler>();
         services.AddScoped<GetProvidersHandler>();

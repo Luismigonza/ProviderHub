@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
+using ProviderHub.Application.Abstractions.Authentication;
 using ProviderHub.Application.Abstractions.Persistence;
+using ProviderHub.Application.Authentication.UseCases;
 using ProviderHub.Application.Providers.UseCases;
 using ProviderHub.Application.Services.UseCases;
 using ProviderHub.Application.Tests.TestDoubles;
@@ -15,6 +17,7 @@ public class DependencyInjectionTests
 {
     public static TheoryData<Type> Handlers =>
     [
+        typeof(SignInHandler),
         typeof(CreateProviderHandler),
         typeof(UpdateProviderHandler),
         typeof(GetProvidersHandler),
@@ -39,6 +42,8 @@ public class DependencyInjectionTests
         services.AddSingleton<IProviderRepository, InMemoryProviderRepository>();
         services.AddSingleton<IServiceRepository, InMemoryServiceRepository>();
         services.AddSingleton<IUnitOfWork, RecordingUnitOfWork>();
+        services.AddSingleton<ICredentialVerifier, AlwaysDeniesCredentials>();
+        services.AddSingleton<IAccessTokenIssuer, FixedTokenIssuer>();
         services.AddApplication();
 
         // ValidateOnBuild walks every registration instead of only the ones this test resolves.
@@ -52,5 +57,15 @@ public class DependencyInjectionTests
         using var scope = provider.CreateScope();
 
         Assert.NotNull(scope.ServiceProvider.GetRequiredService(handlerType));
+    }
+
+    private sealed class AlwaysDeniesCredentials : ICredentialVerifier
+    {
+        public bool Verify(string? userName, string? password) => false;
+    }
+
+    private sealed class FixedTokenIssuer : IAccessTokenIssuer
+    {
+        public AccessToken Issue(string userName) => new("token", DateTimeOffset.UtcNow.AddHours(1));
     }
 }

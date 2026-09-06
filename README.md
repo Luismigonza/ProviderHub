@@ -108,6 +108,8 @@ one place.
 | GET | `/api/services/{id}` | One catalogue entry |
 | PUT | `/api/services/{id}` | Edit its name or hourly rate |
 | GET | `/api/{providers\|services}/sort-fields` | Which fields that list can be sorted by |
+| POST | `/api/auth/login` | Exchange credentials for a token. The only anonymous endpoint |
+| GET | `/api/auth/me` | Who the current token belongs to |
 
 Every list accepts `?page=&pageSize=&search=&sortBy=&direction=asc|desc`, and answers with the
 rows plus `totalCount`, `totalPages`, `hasNextPage` and `hasPreviousPage`, so a client can render
@@ -120,6 +122,7 @@ endpoint can forget it and no two endpoints can disagree:
 | Raised by a use case | Answer |
 | --- | --- |
 | `ValidationException` | `400` with an `errors` object, one entry per field |
+| `InvalidCredentialsException` | `401`, with the same message whichever half was wrong |
 | `NotFoundException` | `404` |
 | `ConflictException` | `409` |
 | `DomainException` | `400`, and a log entry: a validator upstream is missing |
@@ -142,6 +145,41 @@ A rejected request names every problem at once rather than the first one:
 
 Interactive documentation is served at `/scalar/v1` in development, generated from the OpenAPI
 document and the XML comments on the controllers.
+
+## Authentication
+
+The test asks for an authentication mechanism and explicitly does not ask for user
+administration, so there is one user, defined in configuration, and no way to create more.
+
+```bash
+curl -X POST http://localhost:5199/api/auth/login   -H "Content-Type: application/json"   -d '{"userName":"admin","password":"Tekus2026!"}'
+```
+
+The response carries a JWT to send back as `Authorization: Bearer <token>` on every other
+endpoint. In the documentation page, paste it into the **Authorize** box.
+
+Four decisions here are worth more than the code that implements them:
+
+**Authorization is the default, not an opt-in.** A global filter requires an authenticated user,
+and `[AllowAnonymous]` waives it on the login endpoint alone. The other way round, an endpoint
+added next month is public until somebody remembers to protect it, and nothing fails to remind
+them.
+
+**The password is never stored.** Configuration holds a PBKDF2-HMAC-SHA256 hash with a random
+salt and 210,000 iterations, in a self-describing `iterations.salt.hash` format so the cost can
+be raised later without invalidating what already exists. Verification compares in constant time,
+because the duration of a rejection should not reveal how close a guess was.
+
+**A wrong username and a wrong password fail identically.** Distinguishing them turns the login
+form into a way of discovering which accounts exist.
+
+**Every validation the token library offers is switched on**: issuer, audience, signature and
+lifetime, with the default five minutes of clock skew cut to thirty seconds. Each of these is off
+by default in somebody's tutorial, and each one left off turns the token into a decoration.
+
+Secrets live in `appsettings.Development.json` for local work only; `appsettings.json` carries no
+signing key, so a deployment must supply one through the environment and fails at startup if it
+does not.
 
 ## Database
 
@@ -241,7 +279,7 @@ Tracked as the implementation progresses.
 - [x] Persistence: EF Core mapping, repositories, migrations
 - [x] RESTful API
 - [x] Pagination, sorting and search on every list
-- [ ] Authentication
+- [x] Authentication
 - [ ] E-mail notification when a service is created
 - [ ] Summary endpoint with two indicators
 - [x] Input validation

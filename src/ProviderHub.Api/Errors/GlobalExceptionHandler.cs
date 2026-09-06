@@ -71,6 +71,13 @@ internal sealed partial class GlobalExceptionHandler(
             Title = "One or more validation errors occurred.",
         },
 
+        InvalidCredentialsException credentials => new ProblemDetails
+        {
+            Status = StatusCodes.Status401Unauthorized,
+            Title = "Authentication failed.",
+            Detail = credentials.Message,
+        },
+
         NotFoundException notFound => new ProblemDetails
         {
             Status = StatusCodes.Status404NotFound,

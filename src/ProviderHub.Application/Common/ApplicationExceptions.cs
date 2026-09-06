@@ -33,6 +33,32 @@ public class NotFoundException : Exception
 }
 
 /// <summary>
+/// Raised when a sign-in attempt does not match the stored credentials. The API turns it into a
+/// <c>401</c>.
+/// <para>
+/// The message is deliberately vague and identical for every failure: saying which half was
+/// wrong turns a login form into a tool for finding out which accounts exist.
+/// </para>
+/// </summary>
+public class InvalidCredentialsException : Exception
+{
+    public InvalidCredentialsException()
+        : base("The username or password is incorrect.")
+    {
+    }
+
+    public InvalidCredentialsException(string message)
+        : base(message)
+    {
+    }
+
+    public InvalidCredentialsException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
+}
+
+/// <summary>
 /// Raised when a request is well formed but clashes with the current state of the system, such
 /// as registering a NIT that already belongs to another provider. The API turns it into a
 /// <c>409</c>.
