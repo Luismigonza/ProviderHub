@@ -152,7 +152,7 @@ The test asks for an authentication mechanism and explicitly does not ask for us
 administration, so there is one user, defined in configuration, and no way to create more.
 
 ```bash
-curl -X POST http://localhost:5199/api/auth/login   -H "Content-Type: application/json"   -d '{"userName":"admin","password":"Tekus2026!"}'
+curl -X POST http://localhost:5199/api/auth/login -H "Content-Type: application/json" -d "{\"userName\":\"admin\",\"password\":\"Tekus2026!\"}"
 ```
 
 The response carries a JWT to send back as `Authorization: Bearer <token>` on every other
