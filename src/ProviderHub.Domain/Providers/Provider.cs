@@ -18,6 +18,20 @@ public sealed class Provider : AggregateRoot
 
     private readonly List<ServiceOffering> _offerings = [];
 
+    /// <summary>
+    /// Required by the persistence layer, which rebuilds entities from rows instead of going
+    /// through <see cref="Create"/>. The null-forgiving assignments are honest: at this exact
+    /// moment the object really is incomplete, and it is Entity Framework that finishes it.
+    /// This is the one concession the model makes to the outside world.
+    /// </summary>
+    private Provider()
+    {
+        Nit = null!;
+        Name = null!;
+        Website = null!;
+        Email = null!;
+    }
+
     private Provider(Nit nit, string name, WebsiteUrl website, EmailAddress email)
     {
         Nit = nit;

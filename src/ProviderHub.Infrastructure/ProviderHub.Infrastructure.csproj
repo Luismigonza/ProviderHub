@@ -4,6 +4,18 @@
        EF Core persistence, e-mail delivery, external services. -->
 
   <ItemGroup>
+    <!-- The repositories stay internal: outside this assembly they are reached through the
+         interfaces of the application layer, never constructed directly. The integration tests
+         are the one exception, since testing an adapter means instantiating it. -->
+    <InternalsVisibleTo Include="ProviderHub.Infrastructure.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ProviderHub.Application\ProviderHub.Application.csproj" />
   </ItemGroup>
 

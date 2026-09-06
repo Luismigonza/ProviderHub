@@ -91,6 +91,60 @@ one place.
 `ConflictException` and FluentValidation's `ValidationException`. Turning them into 404, 409 and
 400 is the API layer's job, which keeps the use cases runnable from a job or a test.
 
+## Database
+
+```mermaid
+erDiagram
+    Providers ||--o{ ServiceOfferings : "offers"
+    Services  ||--o{ ServiceOfferings : "is offered through"
+    ServiceOfferings ||--|{ ServiceOfferingCountries : "is available in"
+
+    Providers {
+        int      Id            PK "identity"
+        nvarchar NitBaseNumber "UX_Providers_Nit"
+        tinyint  NitCheckDigit
+        nvarchar Name
+        nvarchar Website
+        nvarchar Email         "IX_Providers_Email"
+    }
+
+    Services {
+        int      Id                 PK "identity"
+        nvarchar Name               "UX_Services_Name"
+        decimal  HourlyRateAmount   "decimal(18,2)"
+        char     HourlyRateCurrency "char(3)"
+    }
+
+    ServiceOfferings {
+        int Id         PK "identity"
+        int ProviderId FK "UX_ServiceOfferings_Provider_Service"
+        int ServiceId  FK "UX_ServiceOfferings_Provider_Service"
+    }
+
+    ServiceOfferingCountries {
+        int  ServiceOfferingId PK "FK"
+        char CountryCode       PK "char(2), ISO 3166-1"
+    }
+```
+
+Value objects are mapped as owned types, which keeps their parts as real columns: a value
+converter would collapse `Nit` into an opaque string that no query could look inside, and
+searching by tax identifier is a requirement. `Money` becomes an amount and a currency column,
+`decimal(18,2)` rather than a float, because money in binary floating point is how a total ends
+up one cent off with nobody able to explain why.
+
+Three constraints are enforced by the database and not only by the code: a NIT is unique across
+providers, a provider offers a given service once, and a catalogue service that providers still
+offer cannot be deleted. The use cases check the first two before saving, but only an index wins
+the race between two simultaneous requests.
+
+Two scripts live in [`db/`](db) and are the deliverable the test asks for:
+
+| File | What it is |
+| --- | --- |
+| `db/schema.sql` | Full schema, generated from the EF Core migration and idempotent. |
+| `db/seed.sql` | Sample data: 12 services, 10 providers, 26 offerings, 48 country rows. Idempotent, and every NIT carries its real check digit. |
+
 ## Repository conventions
 
 - `global.json` pins the .NET SDK so every machine builds with the same toolchain.
@@ -101,10 +155,24 @@ one place.
 
 ## Getting started
 
+Start the database, create the schema and load the sample data:
+
+```bash
+docker compose up -d
+dotnet ef database update --project src/ProviderHub.Infrastructure
+docker exec -i providerhub-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'ProviderHub!2026' -C -d ProviderHub -b < db/seed.sql
+```
+
+Then build and run the tests:
+
 ```bash
 dotnet build
 dotnet test
 ```
+
+The unit tests need nothing but the .NET SDK. The persistence tests need the container: without
+it they are skipped rather than failed, so cloning the repository and running `dotnet test` never
+looks like broken code.
 
 ## Requirements coverage
 
@@ -112,6 +180,7 @@ Tracked as the implementation progresses.
 
 - [x] Structured solution, separated projects, DDD-oriented design
 - [x] Provider and Service entities, business rules and unit tests
+- [x] Persistence: EF Core mapping, repositories, migrations
 - [ ] RESTful API
 - [ ] Pagination, sorting and search on every list
 - [ ] Authentication
@@ -120,5 +189,5 @@ Tracked as the implementation progresses.
 - [ ] Input validation
 - [ ] Unit and integration tests
 - [ ] Angular frontend on top of a pre-existing design system
-- [ ] Database schema diagram
-- [ ] Database creation and seed scripts
+- [x] Database schema diagram
+- [x] Database creation and seed scripts

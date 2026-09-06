@@ -1,0 +1,36 @@
+# Local development database.
+#
+#   docker compose up -d
+#
+# The credentials below are deliberately committed: they only ever reach a container bound to
+# localhost, and a reviewer cloning this repository should be able to run it without being handed
+# a secret out of band. Anything that is not local development reads its connection string from
+# the environment instead, and this file is not used there.
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: providerhub-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "ProviderHub!2026"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - providerhub-sqldata:/var/opt/mssql
+    healthcheck:
+      # The API waits for this to report healthy before touching the database.
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$${MSSQL_SA_PASSWORD}\" -C -Q 'SELECT 1' || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  providerhub-sqldata:

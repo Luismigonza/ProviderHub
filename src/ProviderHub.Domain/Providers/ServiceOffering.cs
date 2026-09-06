@@ -21,6 +21,11 @@ public sealed class ServiceOffering : Entity
 {
     private readonly List<CountryCode> _countries = [];
 
+    /// <summary>Required by the persistence layer. See the note on <c>Provider</c>.</summary>
+    private ServiceOffering()
+    {
+    }
+
     internal ServiceOffering(int serviceId, IEnumerable<CountryCode> countries)
     {
         if (serviceId <= 0)

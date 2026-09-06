@@ -16,6 +16,13 @@ public sealed class Service : AggregateRoot
 {
     public const int NameMaxLength = 200;
 
+    /// <summary>Required by the persistence layer. See the note on <c>Provider</c>.</summary>
+    private Service()
+    {
+        Name = null!;
+        HourlyRate = null!;
+    }
+
     private Service(string name, Money hourlyRate)
     {
         Name = name;
