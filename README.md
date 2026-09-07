@@ -1,8 +1,98 @@
 # ProviderHub
 
-Web application to manage the services offered by TEKUS S.A.S. providers.
+Manage the providers of TEKUS S.A.S., the services each one offers, in which countries, and at
+what hourly rate. Built for the Tekus .NET fullstack technical test.
 
-Technical test: .NET Fullstack (ASP.NET Core + Angular).
+**.NET 10 · Angular 21 · SQL Server 2022 · Clean Architecture · 224 tests**
+
+## Run it
+
+You need [Docker](https://www.docker.com/products/docker-desktop/), the
+[.NET 10 SDK](https://dotnet.microsoft.com/download) and [Node 20+](https://nodejs.org).
+
+**1. Database.** Starts SQL Server, creates the schema and loads the sample data
+(10 providers, 12 services, 26 offerings):
+
+```bash
+docker compose up -d --wait
+```
+
+```bash
+dotnet ef database update --project src/ProviderHub.Infrastructure
+```
+
+```bash
+docker exec -i providerhub-sqlserver //opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "ProviderHub!2026" -C -d ProviderHub -b < db/seed.sql
+```
+
+Two notes on that last one. The leading `//` is deliberate: Git Bash on Windows rewrites an
+argument that starts with a single `/` into a Windows path, and the doubled slash stops it while
+meaning the same thing everywhere else. And if `dotnet ef` is not found,
+`dotnet tool install --global dotnet-ef` installs it.
+
+**2. API.** Leave it running:
+
+```bash
+dotnet run --project src/ProviderHub.Api
+```
+
+**3. Web application.** In a second terminal, leave it running too:
+
+```bash
+cd frontend
+```
+
+```bash
+npm install
+```
+
+```bash
+npm start
+```
+
+Then open **<http://localhost:4200>** and sign in with **`admin`** / **`Tekus2026!`**.
+
+| | |
+| --- | --- |
+| Web application | <http://localhost:4200> |
+| API documentation | <http://localhost:5199/scalar/v1> |
+| Notification e-mails | `src/ProviderHub.Api/outbox/*.eml` |
+
+The credentials are committed on purpose: they only ever reach a container bound to localhost, and
+a reviewer cloning this repository should be able to run it without being handed a secret out of
+band. Nothing outside local development reads them.
+
+### A five-minute tour
+
+1. **Sign in with the wrong password first.** The message comes from the server, and it is the
+   same one whether the user or the password was wrong.
+2. **Dashboard.** Both indicators the test asks for, counted by SQL Server in one grouped query.
+3. **Services → sort by hourly rate, then search.** Both happen on the server, over the whole
+   table rather than the page on screen.
+4. **Create a service named `Orbital data relay`.** It already exists, so the API answers `409`
+   and the message lands above the form.
+5. **Create a provider with NIT `123456789-1`.** The check digit is wrong; the domain says so,
+   and the message lands on the NIT field. The right one for that number is `-6`.
+6. **Open a provider and offer it a service.** Look in `outbox/` afterwards: enabling a service
+   raises a domain event, and the notification e-mail is written once the change is committed.
+
+## Tests
+
+```bash
+dotnet test
+```
+
+```bash
+cd frontend
+```
+
+```bash
+npm test
+```
+
+191 backend tests and 33 frontend ones. The unit tests need nothing but the SDK; the persistence
+and end-to-end tests need the database container, and are skipped rather than failed without it,
+so cloning the repository and running `dotnet test` never looks like broken code.
 
 ## Stack
 
@@ -152,12 +242,6 @@ document and the XML comments on the controllers.
 
 An Angular 21 application under [`frontend/`](frontend), standalone components throughout, with
 Angular Material 3 as the pre-existing design system the test asks for.
-
-```bash
-cd frontend
-npm install
-npm start          # http://localhost:4200
-```
 
 The dev server proxies `/api` to `http://localhost:5199`, so the browser sees one origin and CORS
 never enters the picture. In production the application is served behind the same host.
@@ -395,33 +479,6 @@ Two scripts live in [`db/`](db) and are the deliverable the test asks for:
   (nullable reference types, warnings as errors, analyzers).
 - `Directory.Packages.props` centralizes every NuGet version
   ([Central Package Management](https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management)).
-
-## Getting started
-
-Start the database, create the schema and load the sample data:
-
-```bash
-docker compose up -d
-dotnet ef database update --project src/ProviderHub.Infrastructure
-docker exec -i providerhub-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'ProviderHub!2026' -C -d ProviderHub -b < db/seed.sql
-```
-
-Then run the API and open <http://localhost:5199/scalar/v1>:
-
-```bash
-dotnet run --project src/ProviderHub.Api
-```
-
-Or build and run the tests:
-
-```bash
-dotnet build
-dotnet test
-```
-
-The unit tests need nothing but the .NET SDK. The persistence tests need the container: without
-it they are skipped rather than failed, so cloning the repository and running `dotnet test` never
-looks like broken code.
 
 ## Requirements coverage
 
