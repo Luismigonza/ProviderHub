@@ -497,6 +497,10 @@ Two scripts live in [`db/`](db) and are the deliverable the test asks for:
   (nullable reference types, warnings as errors, analyzers).
 - `Directory.Packages.props` centralizes every NuGet version
   ([Central Package Management](https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management)).
+- [`.github/workflows/ci.yml`](.github/workflows/ci.yml) builds and tests both halves on every
+  push and pull request. The backend job runs a SQL Server service container, so the persistence
+  and end-to-end tests run for real in CI rather than being skipped: a suite that quietly stops
+  covering the database is worse than no suite, because it still reports green.
 
 ## Requirements coverage
 

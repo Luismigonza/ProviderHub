@@ -1,0 +1,93 @@
+name: CI
+
+# Every push and every pull request. A branch that is never merged is still worth building:
+# finding out it is broken at merge time is finding out too late.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# A second push to the same branch cancels the run still going for the first one. There is no
+# point paying for an answer about code that has already been replaced.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+
+    # The persistence and end-to-end tests run against a real SQL Server, because that is the
+    # only place their questions can be answered: whether the mapping round-trips an aggregate,
+    # whether the unique indexes hold, whether the LINQ actually translates. A service container
+    # gives the job the same database the developer has locally.
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "ProviderHub!2026"
+          MSSQL_PID: Developer
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'ProviderHub!2026' -C -Q 'SELECT 1' || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
+          --health-start-period 30s
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          # Read from global.json rather than pinned here, so the SDK the workflow installs and
+          # the one the repository demands can never drift apart.
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        # No restore: it just ran. Warnings are errors in this solution, so a build that passes
+        # is also a lint that passes.
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        env:
+          PROVIDERHUB_TEST_CONNECTION: "Server=localhost,1433;Database=master;User Id=sa;Password=ProviderHub!2026;TrustServerCertificate=True;Encrypt=False"
+        run: dotnet test --no-build --configuration Release --logger "console;verbosity=normal"
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        # npm ci, not npm install: it installs exactly what package-lock.json pins and fails if
+        # the lock file and package.json disagree. A build should not quietly pick up a version
+        # nobody chose.
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
