@@ -59,6 +59,10 @@ public static class DependencyInjection
         services.AddScoped<IProviderRepository, ProviderRepository>();
         services.AddScoped<IServiceRepository, ServiceRepository>();
 
+        // The read side, kept apart from the repositories: a dashboard needs projections, not
+        // aggregates.
+        services.AddScoped<ISummaryQueries, SummaryQueries>();
+
         // Repositories and the unit of work share one DbContext per request, and therefore one
         // change tracker and one transaction.
         services.AddScoped<IUnitOfWork, UnitOfWork>();

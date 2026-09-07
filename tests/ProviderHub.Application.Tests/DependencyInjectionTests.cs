@@ -4,6 +4,8 @@ using ProviderHub.Application.Abstractions.Persistence;
 using ProviderHub.Application.Authentication.UseCases;
 using ProviderHub.Application.Providers.UseCases;
 using ProviderHub.Application.Services.UseCases;
+using ProviderHub.Application.Summary.Contracts;
+using ProviderHub.Application.Summary.UseCases;
 using ProviderHub.Application.Tests.TestDoubles;
 
 namespace ProviderHub.Application.Tests;
@@ -29,6 +31,7 @@ public class DependencyInjectionTests
         typeof(UpdateServiceHandler),
         typeof(GetServicesHandler),
         typeof(GetServiceByIdHandler),
+        typeof(GetSummaryHandler),
     ];
 
     [Theory]
@@ -44,6 +47,7 @@ public class DependencyInjectionTests
         services.AddSingleton<IUnitOfWork, RecordingUnitOfWork>();
         services.AddSingleton<ICredentialVerifier, AlwaysDeniesCredentials>();
         services.AddSingleton<IAccessTokenIssuer, FixedTokenIssuer>();
+        services.AddSingleton<ISummaryQueries, EmptySummaryQueries>();
         services.AddApplication();
 
         // ValidateOnBuild walks every registration instead of only the ones this test resolves.
@@ -62,6 +66,12 @@ public class DependencyInjectionTests
     private sealed class AlwaysDeniesCredentials : ICredentialVerifier
     {
         public bool Verify(string? userName, string? password) => false;
+    }
+
+    private sealed class EmptySummaryQueries : ISummaryQueries
+    {
+        public Task<SummaryDto> GetSummaryAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new SummaryDto(new SummaryTotalsDto(0, 0, 0, 0), []));
     }
 
     private sealed class FixedTokenIssuer : IAccessTokenIssuer

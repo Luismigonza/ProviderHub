@@ -4,6 +4,7 @@ using ProviderHub.Application.Authentication.UseCases;
 using ProviderHub.Application.Common;
 using ProviderHub.Application.Providers.UseCases;
 using ProviderHub.Application.Services.UseCases;
+using ProviderHub.Application.Summary.UseCases;
 
 namespace ProviderHub.Application;
 
@@ -40,6 +41,8 @@ public static class DependencyInjection
         services.AddScoped<UpdateServiceHandler>();
         services.AddScoped<GetServicesHandler>();
         services.AddScoped<GetServiceByIdHandler>();
+
+        services.AddScoped<GetSummaryHandler>();
 
         return services;
     }

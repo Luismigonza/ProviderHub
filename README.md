@@ -108,6 +108,7 @@ one place.
 | GET | `/api/services/{id}` | One catalogue entry |
 | PUT | `/api/services/{id}` | Edit its name or hourly rate |
 | GET | `/api/{providers\|services}/sort-fields` | Which fields that list can be sorted by |
+| GET | `/api/summary` | Totals, and both indicators broken down by country |
 | POST | `/api/auth/login` | Exchange credentials for a token. The only anonymous endpoint |
 | GET | `/api/auth/me` | Who the current token belongs to |
 
@@ -224,6 +225,45 @@ Available in: Colombia, Mexico, Peru
 Hourly rate: 340.00 USD
 ```
 
+## Summary indicators
+
+`GET /api/summary` answers the two indicators the test asks for: **how many distinct services are
+offered in each country**, and **how many providers offer something there**, alongside headline
+totals.
+
+```json
+{
+  "totals": { "providerCount": 10, "serviceCount": 12, "offeringCount": 26, "countryCount": 13 },
+  "byCountry": [
+    { "countryCode": "CO", "countryName": "Colombia", "serviceCount": 11, "providerCount": 9 },
+    { "countryCode": "PE", "countryName": "Peru",     "serviceCount": 5,  "providerCount": 5 }
+  ]
+}
+```
+
+This is where the modelling decision of the first commit pays off. The country lives on the
+offering, so both indicators fall out of one grouped query; a country field on the provider would
+have answered the second and left the first with no honest answer.
+
+The read side has its own port, `ISummaryQueries`, deliberately separate from the repositories.
+A repository returns aggregates because the write side needs them to enforce rules; asking one
+for every provider and counting in memory would load the database to produce four numbers, and
+get slower exactly as the data grows. Same idea as CQRS without the machinery: two models over
+one set of tables. The counting is left to SQL Server:
+
+```sql
+SELECT [s0].[CountryCode],
+       COUNT(DISTINCT [s].[ServiceId])  AS [ServiceCount],
+       COUNT(DISTINCT [p].[Id])         AS [ProviderCount]
+FROM [Providers] AS [p]
+INNER JOIN [ServiceOfferings] AS [s]          ON [p].[Id] = [s].[ProviderId]
+INNER JOIN [ServiceOfferingCountries] AS [s0] ON [s].[Id] = [s0].[ServiceOfferingId]
+GROUP BY [s0].[CountryCode]
+```
+
+`DISTINCT` is not decoration: a provider offering three services in Colombia is one provider
+there, not three.
+
 ## Database
 
 ```mermaid
@@ -324,7 +364,7 @@ Tracked as the implementation progresses.
 - [x] Pagination, sorting and search on every list
 - [x] Authentication
 - [x] E-mail notification when a service is enabled
-- [ ] Summary endpoint with two indicators
+- [x] Summary endpoint with two indicators
 - [x] Input validation
 - [ ] Unit and integration tests
 - [ ] Angular frontend on top of a pre-existing design system
