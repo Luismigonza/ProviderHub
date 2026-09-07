@@ -1,0 +1,103 @@
+<header class="dash-header">
+  <h1 class="dash-title">Dashboard</h1>
+  <span class="dash-spacer"></span>
+  <button matButton type="button" (click)="load()" [disabled]="loading()">
+    <mat-icon>refresh</mat-icon>
+    Refresh
+  </button>
+</header>
+
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (error(); as message) {
+  <p class="dash-error" role="alert">{{ message }}</p>
+} @else if (summary(); as data) {
+  <section class="dash-totals" aria-label="Totals">
+    <mat-card appearance="outlined" class="dash-stat">
+      <mat-card-content>
+        <p class="dash-stat-value">{{ data.totals.providerCount }}</p>
+        <p class="dash-stat-label">Providers</p>
+      </mat-card-content>
+      <mat-card-actions>
+        <a matButton routerLink="/providers">View</a>
+      </mat-card-actions>
+    </mat-card>
+
+    <mat-card appearance="outlined" class="dash-stat">
+      <mat-card-content>
+        <p class="dash-stat-value">{{ data.totals.serviceCount }}</p>
+        <p class="dash-stat-label">Services in the catalogue</p>
+      </mat-card-content>
+      <mat-card-actions>
+        <a matButton routerLink="/services">View</a>
+      </mat-card-actions>
+    </mat-card>
+
+    <mat-card appearance="outlined" class="dash-stat">
+      <mat-card-content>
+        <p class="dash-stat-value">{{ data.totals.offeringCount }}</p>
+        <p class="dash-stat-label">Services actually offered</p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined" class="dash-stat">
+      <mat-card-content>
+        <p class="dash-stat-value">{{ data.totals.countryCount }}</p>
+        <p class="dash-stat-label">Countries reached</p>
+      </mat-card-content>
+    </mat-card>
+  </section>
+
+  <h2 class="dash-subtitle">By country</h2>
+  <p class="dash-note">
+    Both indicators count distinct values: a provider offering three services in one country is
+    one provider there, not three.
+  </p>
+
+  <mat-card appearance="outlined">
+    <table mat-table [dataSource]="rows()" class="dash-table">
+      <ng-container matColumnDef="country">
+        <th mat-header-cell *matHeaderCellDef>Country</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="dash-country-code">{{ row.countryCode }}</span>
+          {{ row.countryName }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="services">
+        <th mat-header-cell *matHeaderCellDef>Services offered</th>
+        <td mat-cell *matCellDef="let row">
+          <!-- The bar is decoration; the number beside it is what a screen reader announces,
+               so aria-hidden keeps the same fact from being read out twice. -->
+          <div class="dash-bar-row">
+            <span class="dash-bar-value">{{ row.serviceCount }}</span>
+            <span class="dash-bar" aria-hidden="true">
+              <span class="dash-bar-fill" [style.width.%]="row.servicesWidth"></span>
+            </span>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="providers">
+        <th mat-header-cell *matHeaderCellDef>Providers</th>
+        <td mat-cell *matCellDef="let row">
+          <div class="dash-bar-row">
+            <span class="dash-bar-value">{{ row.providerCount }}</span>
+            <span class="dash-bar" aria-hidden="true">
+              <span class="dash-bar-fill dash-bar-fill--alt" [style.width.%]="row.providersWidth"></span>
+            </span>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+
+    @if (rows().length === 0) {
+      <p class="dash-empty">Nothing is offered anywhere yet.</p>
+    }
+  </mat-card>
+}

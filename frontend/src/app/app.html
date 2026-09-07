@@ -6,6 +6,13 @@
 
     <nav class="app-nav">
       <!-- routerLinkActive marks the current section, so the toolbar answers "where am I". -->
+      <a
+        matButton
+        routerLink="/"
+        routerLinkActive="app-nav--active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        >Dashboard</a
+      >
       <a matButton routerLink="/providers" routerLinkActive="app-nav--active">Providers</a>
       <a matButton routerLink="/services" routerLinkActive="app-nav--active">Services</a>
     </nav>

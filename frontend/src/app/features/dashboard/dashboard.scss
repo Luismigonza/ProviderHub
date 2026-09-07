@@ -1,0 +1,100 @@
+.dash-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-block-end: 1rem;
+}
+
+.dash-title {
+  font: var(--mat-sys-headline-small);
+  margin: 0;
+}
+
+.dash-subtitle {
+  font: var(--mat-sys-title-medium);
+  margin: 2rem 0 0.25rem;
+}
+
+.dash-note {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+  margin: 0 0 1rem;
+  max-width: 44rem;
+}
+
+.dash-spacer {
+  flex: 1 1 auto;
+}
+
+.dash-totals {
+  display: grid;
+  // Cards wrap by themselves instead of at breakpoints picked by hand.
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+}
+
+.dash-stat-value {
+  font: var(--mat-sys-display-small);
+  margin: 0;
+}
+
+.dash-stat-label {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+  margin: 0.25rem 0 0;
+}
+
+.dash-table {
+  width: 100%;
+}
+
+.dash-country-code {
+  display: inline-block;
+  min-width: 2.25rem;
+  font-weight: 600;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.dash-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-block: 0.5rem;
+}
+
+.dash-bar-value {
+  min-width: 1.75rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-bar {
+  flex: 1 1 auto;
+  max-width: 14rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--mat-sys-surface-variant);
+  overflow: hidden;
+}
+
+.dash-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--mat-sys-primary);
+}
+
+.dash-bar-fill--alt {
+  background: var(--mat-sys-tertiary);
+}
+
+.dash-empty,
+.dash-error {
+  padding: 2rem 1rem;
+  text-align: center;
+  font: var(--mat-sys-body-medium);
+}
+
+.dash-error {
+  color: var(--mat-sys-error);
+}

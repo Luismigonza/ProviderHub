@@ -34,9 +34,9 @@ export const routes: Routes = [
   },
   {
     path: '',
-    title: 'ProviderHub',
+    title: 'Dashboard · ProviderHub',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/home/home').then((m) => m.Home),
+    loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
   },
 
   // Anything unrecognized goes home, where the guard decides whether that means the application

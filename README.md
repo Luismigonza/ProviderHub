@@ -166,10 +166,17 @@ never enters the picture. In production the application is served behind the sam
 
 | Route | What it does |
 | --- | --- |
+| `/` | Dashboard: the totals and both country indicators |
 | `/login` | Sign in. The only route a visitor without a token can reach. |
 | `/providers` | Paged, searchable, sortable table with the countries each provider reaches |
 | `/providers/:id` | One provider, and the services it offers: add, change countries, withdraw |
 | `/services` | The catalogue, paged, searchable, sortable, with create and edit |
+
+The dashboard draws its bars with CSS rather than a charting library. Two columns of numbers do
+not justify the weight, the bundle or the theming work of one, and each bar is scaled against the
+largest value in its own column, so the shape of the distribution is what the eye picks up. The
+bars carry `aria-hidden`, because the number beside them already says the same thing and a screen
+reader should not read it twice.
 
 **Paging, searching and sorting happen on the server.** Sorting a page of twenty rows in the
 browser sorts twenty rows, not the ten thousand behind them. The screens turn gestures into query
@@ -429,8 +436,7 @@ Tracked as the implementation progresses.
 - [x] E-mail notification when a service is enabled
 - [x] Summary endpoint with two indicators
 - [x] Input validation
-- [ ] Unit and integration tests
+- [x] Unit and integration tests (191 backend, 33 frontend)
 - [x] Angular frontend on top of a pre-existing design system
-- [ ] Dashboard screen for the indicators
 - [x] Database schema diagram
 - [x] Database creation and seed scripts
