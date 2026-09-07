@@ -21,6 +21,7 @@ Dependencies always point inwards: nothing in `Domain` knows about the outside w
 
 ```
 ProviderHub.sln
+├── frontend                         Angular 21 application (standalone, Material 3)
 ├── src
 │   ├── ProviderHub.Domain           Entities, value objects, business rules. No dependencies.
 │   ├── ProviderHub.Application      Use cases, DTOs, validation. Declares the ports (interfaces).
@@ -146,6 +147,41 @@ A rejected request names every problem at once rather than the first one:
 
 Interactive documentation is served at `/scalar/v1` in development, generated from the OpenAPI
 document and the XML comments on the controllers.
+
+## Frontend
+
+An Angular 21 application under [`frontend/`](frontend), standalone components throughout, with
+Angular Material 3 as the pre-existing design system the test asks for.
+
+```bash
+cd frontend
+npm install
+npm start          # http://localhost:4200
+```
+
+The dev server proxies `/api` to `http://localhost:5199`, so the browser sees one origin and CORS
+never enters the picture. In production the application is served behind the same host.
+
+Three decisions shape the code:
+
+**State lives in signals.** `auth.isSignedIn()` is read straight from a template and Angular
+tracks the dependency itself, so no component subscribes and none has to remember to unsubscribe.
+
+**One interceptor attaches the token, once.** It runs for calls to this API only: a URL that
+merely passes through must not carry the session to a third party. When the API answers `401`,
+the same interceptor ends the session, because staying put would mean every later request failing
+the same silent way.
+
+**The route guard is a convenience, not a security control.** Everything it protects is a screen;
+the data behind those screens is protected by the API, which refuses any request without a valid
+token. A guard that can be bypassed by editing the URL would be the only thing in the way if the
+server trusted the client, and it does not.
+
+The session is kept in `localStorage` so it survives a reload. That is a deliberate trade and
+worth stating: anything in `localStorage` is readable by any script on the page, so an XSS hole
+would hand the token over. The stronger arrangement is an `HttpOnly` cookie, which JavaScript
+cannot read, and it needs the server to issue and validate cookies plus CSRF protection. For a
+bearer-token API of this size, storage is the honest compromise.
 
 ## Authentication
 
@@ -367,6 +403,7 @@ Tracked as the implementation progresses.
 - [x] Summary endpoint with two indicators
 - [x] Input validation
 - [ ] Unit and integration tests
-- [ ] Angular frontend on top of a pre-existing design system
+- [x] Angular frontend: sign-in, routing and design system
+- [ ] Provider and service screens, dashboard
 - [x] Database schema diagram
 - [x] Database creation and seed scripts

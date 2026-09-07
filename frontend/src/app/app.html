@@ -1,0 +1,16 @@
+<!-- The toolbar belongs to the signed-in area, so it is hidden on the login screen rather than
+     shown with a sign-out button that has nothing to sign out of. -->
+@if (auth.isSignedIn()) {
+  <mat-toolbar class="app-toolbar">
+    <span class="app-title">ProviderHub</span>
+    <span class="app-spacer"></span>
+    <span class="app-user">{{ auth.userName() }}</span>
+    <button matIconButton type="button" aria-label="Sign out" (click)="auth.signOut()">
+      <mat-icon>logout</mat-icon>
+    </button>
+  </mat-toolbar>
+}
+
+<main class="app-content" [class.app-content--framed]="auth.isSignedIn()">
+  <router-outlet />
+</main>

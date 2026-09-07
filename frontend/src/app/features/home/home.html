@@ -1,0 +1,29 @@
+<mat-card appearance="outlined" class="home-card">
+  @if (whoAmI(); as state) {
+    @switch (state.status) {
+      @case ('loading') {
+        <mat-progress-bar mode="indeterminate" />
+        <mat-card-content>
+          <p>Checking the session…</p>
+        </mat-card-content>
+      }
+      @case ('ready') {
+        <mat-card-header>
+          <mat-card-title>Signed in as {{ state.userName }}</mat-card-title>
+          <mat-card-subtitle>The API accepted the token issued at sign-in.</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p>Providers, the service catalogue and the dashboard land here next.</p>
+        </mat-card-content>
+      }
+      @case ('failed') {
+        <mat-card-header>
+          <mat-card-title>The API could not be reached</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p role="alert">{{ state.message }}</p>
+        </mat-card-content>
+      }
+    }
+  }
+</mat-card>
