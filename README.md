@@ -5,6 +5,8 @@ what hourly rate. Built for the Tekus .NET fullstack technical test.
 
 **.NET 10 · Angular 21 · SQL Server 2022 · Clean Architecture · 224 tests**
 
+![The dashboard, showing the totals and both indicators broken down by country](docs/screenshots/02-dashboard.png)
+
 ## Run it
 
 You need [Docker](https://www.docker.com/products/docker-desktop/), the
@@ -51,6 +53,8 @@ npm start
 ```
 
 Then open **<http://localhost:4200>** and sign in with **`admin`** / **`Tekus2026!`**.
+
+![The sign-in screen](docs/screenshots/01-login.png)
 
 | | |
 | --- | --- |
@@ -256,6 +260,18 @@ never enters the picture. In production the application is served behind the sam
 | `/providers/:id` | One provider, and the services it offers: add, change countries, withdraw |
 | `/services` | The catalogue, paged, searchable, sortable, with create and edit |
 
+![The providers list, with the countries each provider reaches](docs/screenshots/03-providers.png)
+
+*Providers. The chips are the countries that provider reaches, gathered from its offerings.*
+
+![One provider and the services it offers](docs/screenshots/04-provider-detail.png)
+
+*A provider, and what it offers where. Enabling a service here is what sends the notification.*
+
+![The service catalogue](docs/screenshots/05-services.png)
+
+*The catalogue. Paging, searching and sorting are the server's work, over the whole table.*
+
 The dashboard draws its bars with CSS rather than a charting library. Two columns of numbers do
 not justify the weight, the bundle or the theming work of one, and each bar is scaled against the
 largest value in its own column, so the shape of the distribution is what the eye picks up. The
@@ -271,7 +287,9 @@ Typing is debounced, so a search is one request per pause rather than one per ke
 **The errors the API sends land on the fields that caused them.** A rejected form comes back with
 one entry per offending field, and each message is attached to its own control instead of piling
 into a banner the user has to match up by hand. A `409` has no field errors at all, so a
-duplicated name or NIT is shown above the form, where it belongs.
+duplicated name or NIT is shown above the form, where it belongs:
+
+![The new service dialog showing the conflict reported by the API](docs/screenshots/06-conflict.png)
 
 **Business rules are not copied into the browser.** The NIT check digit is validated on the
 server and nowhere else: a second implementation in TypeScript would be a second place for it to
