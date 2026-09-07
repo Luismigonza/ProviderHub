@@ -1,0 +1,71 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit provider' : 'New provider' }}</h2>
+
+@if (busy()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+<mat-dialog-content>
+  <form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form" id="provider-form">
+    @for (message of generalErrors(); track message) {
+      <p class="dialog-error" role="alert">{{ message }}</p>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>NIT</mat-label>
+      <input matInput formControlName="nit" placeholder="890903938-8" />
+      <mat-hint>Colombian tax identifier, with its check digit.</mat-hint>
+      @if (form.controls.nit.hasError('required')) {
+        <mat-error>A NIT is required.</mat-error>
+      }
+      @if (form.controls.nit.hasError('pattern')) {
+        <mat-error>A NIT is digits and a check digit, like 890903938-8.</mat-error>
+      }
+      @if (form.controls.nit.hasError('server')) {
+        <mat-error>{{ form.controls.nit.getError('server') }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Name</mat-label>
+      <input matInput formControlName="name" maxlength="200" />
+      @if (form.controls.name.hasError('required')) {
+        <mat-error>A name is required.</mat-error>
+      }
+      @if (form.controls.name.hasError('server')) {
+        <mat-error>{{ form.controls.name.getError('server') }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Website</mat-label>
+      <input matInput formControlName="website" placeholder="https://example.com" />
+      @if (form.controls.website.hasError('required')) {
+        <mat-error>A website is required.</mat-error>
+      }
+      @if (form.controls.website.hasError('server')) {
+        <mat-error>{{ form.controls.website.getError('server') }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>E-mail</mat-label>
+      <input matInput formControlName="email" type="email" />
+      @if (form.controls.email.hasError('required')) {
+        <mat-error>An e-mail address is required.</mat-error>
+      }
+      @if (form.controls.email.hasError('email')) {
+        <mat-error>That does not look like an e-mail address.</mat-error>
+      }
+      @if (form.controls.email.hasError('server')) {
+        <mat-error>{{ form.controls.email.getError('server') }}</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button matButton mat-dialog-close type="button">Cancel</button>
+  <button matButton="filled" type="submit" form="provider-form" [disabled]="busy()">
+    {{ isEdit ? 'Save' : 'Create' }}
+  </button>
+</mat-dialog-actions>

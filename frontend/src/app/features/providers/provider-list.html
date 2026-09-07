@@ -1,0 +1,105 @@
+<header class="list-header">
+  <h1 class="list-title">Providers</h1>
+  <span class="list-spacer"></span>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="list-search">
+    <mat-label>Search</mat-label>
+    <mat-icon matPrefix>search</mat-icon>
+    <input
+      matInput
+      type="search"
+      placeholder="Name, NIT or e-mail"
+      (input)="onSearch($any($event.target).value)"
+    />
+  </mat-form-field>
+
+  <button matButton="filled" type="button" (click)="create()">
+    <mat-icon>add</mat-icon>
+    New provider
+  </button>
+</header>
+
+<mat-card appearance="outlined" class="list-card">
+  @if (list.loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (list.error(); as message) {
+    <p class="list-error" role="alert">{{ message }}</p>
+  } @else {
+    <table mat-table [dataSource]="list.rows()" matSort (matSortChange)="onSort($event)" class="list-table">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+        <td mat-cell *matCellDef="let provider">{{ provider.name }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="nit">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>NIT</th>
+        <td mat-cell *matCellDef="let provider">{{ provider.nit }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>E-mail</th>
+        <td mat-cell *matCellDef="let provider">{{ provider.email }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="services">
+        <th mat-header-cell *matHeaderCellDef class="numeric">Services</th>
+        <td mat-cell *matCellDef="let provider" class="numeric">
+          {{ provider.offeredServiceCount }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="countries">
+        <th mat-header-cell *matHeaderCellDef>Countries</th>
+        <td mat-cell *matCellDef="let provider">
+          <div class="country-chips">
+            @for (country of provider.countries; track country.code) {
+              <mat-chip [matTooltip]="country.name" disableRipple>{{ country.code }}</mat-chip>
+            } @empty {
+              <span>—</span>
+            }
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef aria-label="Actions"></th>
+        <td mat-cell *matCellDef="let provider">
+          <button
+            matIconButton
+            type="button"
+            [routerLink]="['/providers', provider.id]"
+            [attr.aria-label]="'Open ' + provider.name"
+            matTooltip="Services offered"
+          >
+            <mat-icon>open_in_new</mat-icon>
+          </button>
+          <button
+            matIconButton
+            type="button"
+            [attr.aria-label]="'Edit ' + provider.name"
+            (click)="edit(provider)"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+
+    @if (list.rows().length === 0 && !list.loading()) {
+      <p class="list-empty">No providers match that search.</p>
+    }
+  }
+
+  <mat-paginator
+    [length]="list.total()"
+    [pageIndex]="list.pageIndex()"
+    [pageSize]="list.pageSize()"
+    [pageSizeOptions]="[5, 10, 25, 50]"
+    (page)="onPage($event)"
+  />
+</mat-card>

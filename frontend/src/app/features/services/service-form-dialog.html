@@ -1,0 +1,46 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit service' : 'New service' }}</h2>
+
+@if (busy()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+<mat-dialog-content>
+  <form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form" id="service-form">
+    @for (message of generalErrors(); track message) {
+      <p class="dialog-error" role="alert">{{ message }}</p>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Name</mat-label>
+      <input matInput formControlName="name" maxlength="200" />
+      @if (form.controls.name.hasError('required')) {
+        <mat-error>A name is required.</mat-error>
+      }
+      @if (form.controls.name.hasError('server')) {
+        <mat-error>{{ form.controls.name.getError('server') }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Hourly rate</mat-label>
+      <input matInput formControlName="hourlyRate" type="number" step="0.01" min="0" />
+      <span matTextSuffix>USD</span>
+      @if (form.controls.hourlyRate.hasError('required')) {
+        <mat-error>An hourly rate is required.</mat-error>
+      }
+      @if (form.controls.hourlyRate.hasError('min')) {
+        <mat-error>The rate cannot be negative.</mat-error>
+      }
+      @if (form.controls.hourlyRate.hasError('server')) {
+        <mat-error>{{ form.controls.hourlyRate.getError('server') }}</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button matButton mat-dialog-close type="button">Cancel</button>
+  <button matButton="filled" type="submit" form="service-form" [disabled]="busy()">
+    {{ isEdit ? 'Save' : 'Create' }}
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,100 @@
+<p><a matButton routerLink="/providers"><mat-icon>arrow_back</mat-icon> All providers</a></p>
+
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (error(); as message) {
+  <p class="list-error" role="alert">{{ message }}</p>
+} @else if (provider(); as current) {
+  <mat-card appearance="outlined" class="detail-card">
+    <mat-card-header>
+      <mat-card-title>{{ current.name }}</mat-card-title>
+      <mat-card-subtitle>NIT {{ current.nit }}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <dl class="detail-fields">
+        <dt>Website</dt>
+        <dd>
+          <!-- rel="noopener" so the opened page cannot reach back through window.opener. -->
+          <a [href]="current.website" target="_blank" rel="noopener noreferrer">{{ current.website }}</a>
+        </dd>
+        <dt>E-mail</dt>
+        <dd><a [href]="'mailto:' + current.email">{{ current.email }}</a></dd>
+      </dl>
+    </mat-card-content>
+    <mat-card-actions>
+      <button matButton type="button" (click)="edit()">
+        <mat-icon>edit</mat-icon>
+        Edit details
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <header class="list-header detail-offerings-header">
+    <h2 class="list-title">Services offered</h2>
+    <span class="list-spacer"></span>
+    <button matButton="filled" type="button" (click)="offerService()">
+      <mat-icon>add</mat-icon>
+      Offer a service
+    </button>
+  </header>
+
+  <mat-card appearance="outlined" class="list-card">
+    <table mat-table [dataSource]="current.offerings" class="list-table">
+      <ng-container matColumnDef="service">
+        <th mat-header-cell *matHeaderCellDef>Service</th>
+        <td mat-cell *matCellDef="let offering">{{ offering.serviceName }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="hourlyRate">
+        <th mat-header-cell *matHeaderCellDef class="numeric">Hourly rate</th>
+        <td mat-cell *matCellDef="let offering" class="numeric">
+          {{ offering.hourlyRate | currency: offering.currency }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="countries">
+        <th mat-header-cell *matHeaderCellDef>Offered in</th>
+        <td mat-cell *matCellDef="let offering">
+          <div class="country-chips">
+            @for (country of offering.countries; track country.code) {
+              <mat-chip [matTooltip]="country.name" disableRipple>{{ country.code }}</mat-chip>
+            }
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef aria-label="Actions"></th>
+        <td mat-cell *matCellDef="let offering">
+          <button
+            matIconButton
+            type="button"
+            matTooltip="Change countries"
+            [attr.aria-label]="'Change the countries of ' + offering.serviceName"
+            (click)="offerService(offering)"
+          >
+            <mat-icon>public</mat-icon>
+          </button>
+          <button
+            matIconButton
+            type="button"
+            matTooltip="Stop offering"
+            [attr.aria-label]="'Stop offering ' + offering.serviceName"
+            (click)="withdraw(offering)"
+          >
+            <mat-icon>link_off</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+
+    @if (current.offerings.length === 0) {
+      <p class="list-empty">This provider does not offer anything yet.</p>
+    }
+  </mat-card>
+}

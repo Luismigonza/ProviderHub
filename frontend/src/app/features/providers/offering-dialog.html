@@ -1,0 +1,59 @@
+<h2 mat-dialog-title>
+  {{ isEdit ? 'Where is this service offered?' : 'Offer a service' }}
+</h2>
+
+@if (busy()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+<mat-dialog-content>
+  <form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form" id="offering-form">
+    @for (message of generalErrors(); track message) {
+      <p class="dialog-error" role="alert">{{ message }}</p>
+    }
+
+    @if (isEdit) {
+      <p><strong>{{ data.offering!.serviceName }}</strong></p>
+    } @else {
+      <mat-form-field appearance="outline">
+        <mat-label>Service</mat-label>
+        <mat-select formControlName="serviceId">
+          @for (service of catalogue(); track service.id) {
+            <mat-option [value]="service.id">{{ service.name }}</mat-option>
+          } @empty {
+            <mat-option [disabled]="true">This provider already offers everything.</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.serviceId.hasError('required') || form.controls.serviceId.hasError('min')) {
+          <mat-error>Pick a service.</mat-error>
+        }
+        @if (form.controls.serviceId.hasError('server')) {
+          <mat-error>{{ form.controls.serviceId.getError('server') }}</mat-error>
+        }
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Countries</mat-label>
+      <mat-select formControlName="countries" multiple>
+        @for (country of countries; track country.code) {
+          <mat-option [value]="country.code">{{ country.name }}</mat-option>
+        }
+      </mat-select>
+      <mat-hint>A service has to be offered somewhere: pick at least one.</mat-hint>
+      @if (form.controls.countries.hasError('required') || form.controls.countries.hasError('minlength')) {
+        <mat-error>Pick at least one country.</mat-error>
+      }
+      @if (form.controls.countries.hasError('server')) {
+        <mat-error>{{ form.controls.countries.getError('server') }}</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button matButton mat-dialog-close type="button">Cancel</button>
+  <button matButton="filled" type="submit" form="offering-form" [disabled]="busy()">
+    {{ isEdit ? 'Save' : 'Offer' }}
+  </button>
+</mat-dialog-actions>

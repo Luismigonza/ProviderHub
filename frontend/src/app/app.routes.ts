@@ -14,6 +14,25 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login/login').then((m) => m.Login),
   },
   {
+    path: 'providers',
+    title: 'Providers · ProviderHub',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/providers/provider-list').then((m) => m.ProviderList),
+  },
+  {
+    path: 'providers/:id',
+    title: 'Provider · ProviderHub',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/providers/provider-detail').then((m) => m.ProviderDetail),
+  },
+  {
+    path: 'services',
+    title: 'Services · ProviderHub',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/services/service-list').then((m) => m.ServiceList),
+  },
+  {
     path: '',
     title: 'ProviderHub',
     canActivate: [authGuard],

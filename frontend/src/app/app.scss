@@ -12,6 +12,21 @@
 
 .app-title {
   font: var(--mat-sys-title-medium);
+  color: inherit;
+  text-decoration: none;
+  margin-inline-end: 1.5rem;
+}
+
+.app-nav {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.app-nav--active {
+  // The current section, underlined rather than only coloured: colour alone is not a signal
+  // everyone can see.
+  text-decoration: underline;
+  text-underline-offset: 0.35rem;
 }
 
 .app-spacer {

@@ -2,7 +2,14 @@
      shown with a sign-out button that has nothing to sign out of. -->
 @if (auth.isSignedIn()) {
   <mat-toolbar class="app-toolbar">
-    <span class="app-title">ProviderHub</span>
+    <a class="app-title" routerLink="/">ProviderHub</a>
+
+    <nav class="app-nav">
+      <!-- routerLinkActive marks the current section, so the toolbar answers "where am I". -->
+      <a matButton routerLink="/providers" routerLinkActive="app-nav--active">Providers</a>
+      <a matButton routerLink="/services" routerLinkActive="app-nav--active">Services</a>
+    </nav>
+
     <span class="app-spacer"></span>
     <span class="app-user">{{ auth.userName() }}</span>
     <button matIconButton type="button" aria-label="Sign out" (click)="auth.signOut()">

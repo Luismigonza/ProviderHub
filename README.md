@@ -162,6 +162,33 @@ npm start          # http://localhost:4200
 The dev server proxies `/api` to `http://localhost:5199`, so the browser sees one origin and CORS
 never enters the picture. In production the application is served behind the same host.
 
+### Screens
+
+| Route | What it does |
+| --- | --- |
+| `/login` | Sign in. The only route a visitor without a token can reach. |
+| `/providers` | Paged, searchable, sortable table with the countries each provider reaches |
+| `/providers/:id` | One provider, and the services it offers: add, change countries, withdraw |
+| `/services` | The catalogue, paged, searchable, sortable, with create and edit |
+
+**Paging, searching and sorting happen on the server.** Sorting a page of twenty rows in the
+browser sorts twenty rows, not the ten thousand behind them. The screens turn gestures into query
+parameters; `mat-paginator` is told the total the API reported, not the number of rows on screen.
+Typing is debounced, so a search is one request per pause rather than one per keystroke, and
+`switchMap` cancels the request in flight so a slow answer cannot overwrite a newer one.
+
+**The errors the API sends land on the fields that caused them.** A rejected form comes back with
+one entry per offending field, and each message is attached to its own control instead of piling
+into a banner the user has to match up by hand. A `409` has no field errors at all, so a
+duplicated name or NIT is shown above the form, where it belongs.
+
+**Business rules are not copied into the browser.** The NIT check digit is validated on the
+server and nowhere else: a second implementation in TypeScript would be a second place for it to
+be wrong. The client checks shape and presence, which is what makes the form feel quick; the
+server checks the rule and sends back its own message.
+
+### Under the hood
+
 Three decisions shape the code:
 
 **State lives in signals.** `auth.isSignedIn()` is read straight from a template and Angular
@@ -403,7 +430,7 @@ Tracked as the implementation progresses.
 - [x] Summary endpoint with two indicators
 - [x] Input validation
 - [ ] Unit and integration tests
-- [x] Angular frontend: sign-in, routing and design system
-- [ ] Provider and service screens, dashboard
+- [x] Angular frontend on top of a pre-existing design system
+- [ ] Dashboard screen for the indicators
 - [x] Database schema diagram
 - [x] Database creation and seed scripts

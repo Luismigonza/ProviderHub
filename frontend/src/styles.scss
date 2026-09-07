@@ -37,3 +37,19 @@ body {
   height: 100%;
 }
 /* You can add global styles to this file, and also import other style files */
+
+// Shared by the dialogs. Kept global because a dialog renders outside the component that opened
+// it, where that component's scoped styles do not reach.
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-block-start: 0.5rem;
+  min-width: min(26rem, 70vw);
+}
+
+.dialog-error {
+  margin: 0 0 0.75rem;
+  color: var(--mat-sys-error);
+  font: var(--mat-sys-body-medium);
+}

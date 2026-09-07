@@ -1,0 +1,33 @@
+@use '../services/service-list.scss';
+
+.detail-card {
+  margin-block-end: 1.5rem;
+  max-width: 40rem;
+}
+
+.detail-fields {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+}
+
+.detail-fields dt {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.detail-fields dd {
+  margin: 0;
+}
+
+.detail-offerings-header {
+  margin-block-start: 1rem;
+}
+
+.country-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding-block: 0.35rem;
+}
