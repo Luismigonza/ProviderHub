@@ -30,9 +30,18 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     public const string Password = "Sup3rSecret!2026";
 
+    /// <summary>The address the system preferences point at during the tests.</summary>
+    public const string NotificationRecipient = "operations@tekus.test";
+
     // Hashed with the very code the application uses, rather than pasted in as a constant: if
     // the hashing changes, these tests keep working, and if it breaks, they fail.
     private static readonly string PasswordHash = PasswordHasher.Hash(Password);
+
+    /// <summary>Where the file transport drops the notifications this run produces.</summary>
+    public string Outbox { get; } = Path.Combine(
+        Path.GetTempPath(),
+        "providerhub-tests",
+        Guid.NewGuid().ToString("N"));
 
     private static readonly string MasterConnection =
         Environment.GetEnvironmentVariable("PROVIDERHUB_TEST_CONNECTION")
@@ -82,6 +91,11 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             await context.Database.EnsureDeletedAsync();
         }
 
+        if (Directory.Exists(Outbox))
+        {
+            Directory.Delete(Outbox, recursive: true);
+        }
+
         await base.DisposeAsync();
         GC.SuppressFinalize(this);
     }
@@ -124,6 +138,12 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting(
             "Authentication:SigningKey",
             "integration-tests-signing-key-that-is-long-enough-for-hmac-sha256");
+
+        // Notifications are written to a folder of this run's own, so a test can read what would
+        // have been sent without an SMTP server anywhere in sight.
+        builder.UseSetting("Notifications:Transport", "File");
+        builder.UseSetting("Notifications:OutboxDirectory", Outbox);
+        builder.UseSetting("Notifications:NewServiceRecipient", NotificationRecipient);
     }
 }
 

@@ -181,6 +181,49 @@ Secrets live in `appsettings.Development.json` for local work only; `appsettings
 signing key, so a deployment must supply one through the environment and fails at startup if it
 does not.
 
+## Notifications
+
+When a provider enables a service, an e-mail goes to the address named in the system
+preferences. Nothing about that lives in the domain: `Provider.OfferService` records a
+`ServiceOfferedDomainEvent` and moves on, and a handler in the application layer decides that
+somebody should hear about it. Adding a second reaction, an audit entry or a webhook, is one
+registration and no change to the model.
+
+**Events are published after the commit, never before.** `UnitOfWork` collects what the
+aggregates recorded, saves, and only then dispatches:
+
+```
+collect events → SaveChanges → clear events → dispatch
+```
+
+A handler announces something as true. Run inside the transaction, a later rollback would turn
+that announcement into a lie, and there is no way to un-send a message. The reverse risk is real
+and accepted: a process that dies between the commit and the dispatch loses the notification.
+Closing that gap needs an outbox table written in the same transaction and drained by a
+background worker — the right answer when a missed notification costs money, and more machinery
+than this system earns. A test asserts the ordering by having the dispatcher read the database
+through a second connection and find the row already there.
+
+**A failing handler cannot fail the request.** By the time it runs the work is committed, so the
+dispatcher logs the failure and lets the remaining handlers take their turn. A mail server that
+is down must not reject a provider registration that succeeded.
+
+In development, e-mail is written to `outbox/` as `.eml` files rather than sent, so the project
+runs and its tests pass with no SMTP server anywhere. `Notifications:Transport` switches to
+`Smtp` for a real one.
+
+```
+From: no-reply@providerhub.local
+To: operations@tekus.co
+Subject: Nueva Empresa S.A.S. has enabled a new service
+
+Provider: Nueva Empresa S.A.S.
+NIT: 900123456-8
+Service: Orbital data relay
+Available in: Colombia, Mexico, Peru
+Hourly rate: 340.00 USD
+```
+
 ## Database
 
 ```mermaid
@@ -280,7 +323,7 @@ Tracked as the implementation progresses.
 - [x] RESTful API
 - [x] Pagination, sorting and search on every list
 - [x] Authentication
-- [ ] E-mail notification when a service is created
+- [x] E-mail notification when a service is enabled
 - [ ] Summary endpoint with two indicators
 - [x] Input validation
 - [ ] Unit and integration tests

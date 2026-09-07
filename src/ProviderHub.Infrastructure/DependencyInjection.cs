@@ -2,8 +2,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ProviderHub.Application.Abstractions.Authentication;
+using ProviderHub.Application.Abstractions.Events;
+using ProviderHub.Application.Abstractions.Messaging;
 using ProviderHub.Application.Abstractions.Persistence;
+using ProviderHub.Application.Providers.EventHandlers;
+using ProviderHub.Domain.Providers.Events;
 using ProviderHub.Infrastructure.Authentication;
+using ProviderHub.Infrastructure.Events;
+using ProviderHub.Infrastructure.Messaging;
 using ProviderHub.Infrastructure.Persistence;
 using ProviderHub.Infrastructure.Persistence.Repositories;
 
@@ -27,7 +33,8 @@ public static class DependencyInjection
 
         return services
             .AddPersistence(configuration)
-            .AddAuthentication(configuration);
+            .AddAuthentication(configuration)
+            .AddNotifications(configuration);
     }
 
     private static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
@@ -52,9 +59,44 @@ public static class DependencyInjection
         services.AddScoped<IProviderRepository, ProviderRepository>();
         services.AddScoped<IServiceRepository, ServiceRepository>();
 
-        // The DbContext is the unit of work. Resolving the same instance through both types
-        // keeps repositories and commit inside one change tracker, and therefore one transaction.
-        services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<ProviderHubDbContext>());
+        // Repositories and the unit of work share one DbContext per request, and therefore one
+        // change tracker and one transaction.
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddNotifications(this IServiceCollection services, IConfiguration configuration)
+    {
+        services
+            .AddOptions<NotificationOptions>()
+            .Bind(configuration.GetSection(NotificationOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddSingleton<INotificationPreferences, ConfiguredNotificationPreferences>();
+
+        // Which transport is used is a deployment decision, not a code one. Development writes
+        // files; anything else needs a server, and saying so in configuration keeps the choice
+        // out of the code that sends.
+        var transport = configuration
+            .GetSection(NotificationOptions.SectionName)
+            .GetValue<EmailTransport>(nameof(NotificationOptions.Transport));
+
+        if (transport == EmailTransport.Smtp)
+        {
+            services.AddScoped<IEmailSender, SmtpEmailSender>();
+        }
+        else
+        {
+            services.AddScoped<IEmailSender, FileEmailSender>();
+        }
+
+        services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+
+        // Registered against the event it handles, which is how the dispatcher finds it. A
+        // second reaction to the same event is one more line here and nothing else.
+        services.AddScoped<IDomainEventHandler<ServiceOfferedDomainEvent>, ServiceOfferedEmailNotifier>();
 
         return services;
     }

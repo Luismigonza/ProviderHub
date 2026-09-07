@@ -1,28 +1,24 @@
 using Microsoft.EntityFrameworkCore;
-using ProviderHub.Application.Abstractions.Persistence;
 using ProviderHub.Domain.Providers;
 using ProviderHub.Domain.Services;
 
 namespace ProviderHub.Infrastructure.Persistence;
 
 /// <summary>
-/// The Entity Framework session, and the implementation of
-/// <see cref="IUnitOfWork"/>.
+/// The Entity Framework session.
 /// <para>
 /// The change tracker already is a unit of work: it accumulates every modification and writes
-/// them in one transaction on save. Exposing it through the application's own interface means
-/// the use cases can commit without ever naming Entity Framework.
+/// them in one transaction on save. It is <see cref="UnitOfWork"/> that exposes this through the
+/// application's own interface, so that committing and publishing domain events stay one
+/// deliberate sequence rather than an override buried in the context.
 /// </para>
 /// </summary>
 public sealed class ProviderHubDbContext(DbContextOptions<ProviderHubDbContext> options)
-    : DbContext(options), IUnitOfWork
+    : DbContext(options)
 {
     public DbSet<Provider> Providers => Set<Provider>();
 
     public DbSet<Service> Services => Set<Service>();
-
-    async Task IUnitOfWork.SaveChangesAsync(CancellationToken cancellationToken) =>
-        await SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
